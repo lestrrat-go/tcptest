@@ -5,13 +5,15 @@ import (
   "log"
   "net"
   "os/exec"
+  "syscall"
   "testing"
   "time"
 )
 
 func Example() {
+  var cmd *exec.Cmd
   memd := func(port int) {
-    cmd := exec.Command("memcached", "-p", fmt.Sprintf("%d", port))
+    cmd = exec.Command("memcached", "-p", fmt.Sprintf("%d", port))
     cmd.Run()
   }
 
@@ -21,6 +23,14 @@ func Example() {
   }
 
   log.Printf("memcached started on port %d", port)
+  defer func() {
+    if cmd != nil && cmd.Process != nil {
+      cmd.Process.Signal(syscall.SIGTERM)
+    }
+  }()
+
+  // Do what you want...
+
 }
 
 func TestBasic(t *testing.T) {
@@ -49,4 +59,35 @@ func TestBasic(t *testing.T) {
   }
 
   t.Logf("Successfully connected to port %d", port)
+}
+
+
+func TestMemcached(t *testing.T) {
+  // Only run this if we can find a memcached binary in our PATH
+  fqname, err := exec.LookPath("memcached")
+  if err != nil {
+    t.Skip("No memcached available, skipping test")
+  }
+
+  t.Logf("Using memcached in %s", fqname)
+
+  var cmd *exec.Cmd
+  cb := func(port int) {
+    cmd = exec.Command("memcached", "-p", fmt.Sprintf("%d", port))
+    cmd.Run()
+  }
+
+  port, err := Start(cb, time.Minute)
+  if err != nil {
+    log.Fatalf("Failed to start listening on random port: %s", err)
+  }
+
+  cmd.Process.Signal(syscall.SIGTERM)
+
+  time.Sleep(5 * time.Second)
+
+  _, err = net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+  if err == nil {
+    t.Errorf("After 5 seconds, we can still connect to port %d. Not good", port)
+  }
 }
