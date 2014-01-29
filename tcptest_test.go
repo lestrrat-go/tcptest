@@ -17,12 +17,12 @@ func Example() {
     cmd.Run()
   }
 
-  port, err := Start(memd, 30 * time.Second)
+  server, err := Start(memd, 30 * time.Second)
   if err != nil {
     log.Fatalf("Failed to start memcached: %s", err)
   }
 
-  log.Printf("memcached started on port %d", port)
+  log.Printf("memcached started on port %d", server.Port())
   defer func() {
     if cmd != nil && cmd.Process != nil {
       cmd.Process.Signal(syscall.SIGTERM)
@@ -31,6 +31,13 @@ func Example() {
 
   // Do what you want...
 
+
+  // When you're done, you need to kill the daemon
+  // because, well, it doesn't unless you tell it to!
+  cmd.Process.Signal(syscall.SIGTERM)
+
+  // Wait for the callback goroutine to exit
+  server.Wait()
 }
 
 func TestBasic(t *testing.T) {
@@ -47,18 +54,20 @@ func TestBasic(t *testing.T) {
   }
 
   t.Logf("Starting callback")
-  port, err := Start(cb, time.Minute)
+  server, err := Start(cb, time.Minute)
   if err != nil {
     log.Fatalf("Failed to start listening on random port: %s", err)
   }
 
-  t.Logf("Attempting to connect to port %d", port)
-  _, err = net.Dial("tcp", fmt.Sprintf(":%d", port))
+  t.Logf("Attempting to connect to port %d", server.Port())
+  _, err = net.Dial("tcp", fmt.Sprintf(":%d", server.Port()))
   if err != nil {
-    log.Fatalf("Failed to connect to port %d: %s", port, err)
+    log.Fatalf("Failed to connect to port %d: %s", server.Port(), err)
   }
 
-  t.Logf("Successfully connected to port %d", port)
+  t.Logf("Successfully connected to port %d", server.Port())
+
+  server.Wait()
 }
 
 
@@ -77,7 +86,7 @@ func TestMemcached(t *testing.T) {
     cmd.Run()
   }
 
-  port, err := Start(cb, time.Minute)
+  server, err := Start(cb, time.Minute)
   if err != nil {
     log.Fatalf("Failed to start listening on random port: %s", err)
   }
@@ -86,8 +95,8 @@ func TestMemcached(t *testing.T) {
 
   time.Sleep(5 * time.Second)
 
-  _, err = net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+  _, err = net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", server.Port()))
   if err == nil {
-    t.Errorf("After 5 seconds, we can still connect to port %d. Not good", port)
+    t.Errorf("After 5 seconds, we can still connect to port %d. Not good", server.Port())
   }
 }

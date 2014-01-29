@@ -5,18 +5,35 @@ import (
   "github.com/lestrrat/go-tcputil"
 )
 
-func Start(cb func (int), dur time.Duration) (int, error) {
+type TCPTest struct {
+  port int
+  exit chan bool
+}
+
+func Start(cb func (int), dur time.Duration) (*TCPTest, error) {
   p, err := tcputil.EmptyPort()
   if err != nil {
-    return 0, err
+    return nil, err
   }
 
-  go cb(p)
+  c := make(chan bool, 1)
+  go func(c chan bool, p int) {
+    cb(p)
+    c <-true
+  }(c, p)
 
   err = tcputil.WaitLocalPort(p, dur)
   if err != nil {
-    return 0, err
+    return nil, err
   }
 
-  return p, nil
+  return &TCPTest { p, c }, nil
+}
+
+func (t *TCPTest) Port() int {
+  return t.port
+}
+
+func (t *TCPTest) Wait() {
+  <-t.exit
 }
