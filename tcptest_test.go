@@ -46,13 +46,17 @@ func TestBasic(t *testing.T) {
     if err != nil {
       t.Fatalf("Failed to listen on port %d: %s", port, err)
     }
-    defer l.Close()
 
-    _, err = l.Accept()
-    if err != nil {
-      t.Fatalf("Failed to accept connection on %d: %s", port, err)
+    // We'll be accessed twice
+    for i := 0; i < 2; i++ {
+      conn, err := l.Accept()
+      if err != nil {
+        t.Fatalf("Failed to accept connection on %d: %s", port, err)
+      }
+      time.Sleep(500 * time.Millisecond)
+      conn.Close()
     }
-
+    l.Close()
   }
 
   t.Logf("Starting callback")
@@ -62,7 +66,7 @@ func TestBasic(t *testing.T) {
   }
 
   t.Logf("Attempting to connect to port %d", server.Port())
-  conn, err = net.Dial("tcp", fmt.Sprintf(":%d", server.Port()))
+  conn, err := net.Dial("tcp", fmt.Sprintf(":%d", server.Port()))
   if err != nil {
     log.Fatalf("Failed to connect to port %d: %s", server.Port(), err)
   }
