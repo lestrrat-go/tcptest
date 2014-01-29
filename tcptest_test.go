@@ -14,6 +14,9 @@ func Example() {
   var cmd *exec.Cmd
   memd := func(port int) {
     cmd = exec.Command("memcached", "-p", fmt.Sprintf("%d", port))
+    cmd.SysProcAttr = &syscall.SysProcAttr {
+      Setpgid: true,
+    }
     cmd.Run()
   }
 
