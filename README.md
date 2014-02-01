@@ -1,7 +1,7 @@
 go-tcptest
 ==========
 
-Start A Network Server On Random Local Port (Port of Perl5's TCP::Test)
+Start A Network Server On Random Local Port (Port of Perl5's [Test::TCP](https://metacpan.org/release/Test-TCP))
 
 ```go
   var cmd *exec.Cmd
