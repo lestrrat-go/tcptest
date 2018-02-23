@@ -1,7 +1,12 @@
-go-tcptest
+tcptest
 ==========
 
 Start A Network Server On Random Local Port (Port of Perl5's [Test::TCP](https://metacpan.org/release/Test-TCP))
+
+[![Build Status](https://travis-ci.org/lestrrat-go/tcptest.png?branch=master)](https://travis-ci.org/lestrrat-go/tcptest)
+[![GoDoc](https://godoc.org/github.com/lestrrat-go/tcptest?status.svg)](https://godoc.org/github.com/lestrrat-go/tcptest)
+
+# SYNOPSIS
 
 ```go
   var cmd *exec.Cmd
@@ -33,5 +38,3 @@ Start A Network Server On Random Local Port (Port of Perl5's [Test::TCP](https:/
   // And wait
   server.Wait()
 ```
-
-API docs: http://godoc.org/github.com/lestrrat/go-tcptest

@@ -3,7 +3,7 @@ package tcptest
 import (
 	"time"
 
-	"github.com/lestrrat/go-tcputil"
+	"github.com/lestrrat-go/tcputil"
 )
 
 type TCPTest struct {
